@@ -4,7 +4,7 @@ info:
   description: A simple text-processing plugin for Coze. It does not require external search APIs or third-party services.
   version: 1.0.0
 servers:
-  - url: https://YOUR_DEPLOYED_DOMAIN.com
+  - url: https://coze-text.onrender.com
 paths:
   /health:
     get:
