@@ -1,0 +1,252 @@
+openapi: 3.0.3
+info:
+  title: Text Toolbox Plugin
+  description: A simple text-processing plugin for Coze. It does not require external search APIs or third-party services.
+  version: 1.0.0
+servers:
+  - url: https://YOUR_DEPLOYED_DOMAIN.com
+paths:
+  /health:
+    get:
+      operationId: health_check
+      summary: Health check
+      description: Check whether the plugin service is running.
+      responses:
+        "200":
+          description: Service status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+  /text_count:
+    post:
+      operationId: text_count
+      summary: Count text length and structure
+      description: Count characters, Chinese characters, English words, paragraphs, sentences, and estimated word count.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  description: The text to count.
+      responses:
+        "200":
+          description: Text statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_characters:
+                    type: integer
+                  characters_without_spaces:
+                    type: integer
+                  chinese_characters:
+                    type: integer
+                  english_words:
+                    type: integer
+                  estimated_word_count:
+                    type: integer
+                  paragraph_count:
+                    type: integer
+                  sentence_count:
+                    type: integer
+                  average_sentence_length:
+                    type: number
+  /clean_text:
+    post:
+      operationId: clean_text
+      summary: Clean text
+      description: Normalize spaces and line breaks, and optionally remove URLs and emails.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  description: The text to clean.
+                normalize_spaces:
+                  type: boolean
+                  default: true
+                  description: Collapse repeated spaces and tabs.
+                normalize_newlines:
+                  type: boolean
+                  default: true
+                  description: Collapse repeated blank lines.
+                remove_urls:
+                  type: boolean
+                  default: false
+                  description: Remove URLs.
+                remove_emails:
+                  type: boolean
+                  default: false
+                  description: Remove email addresses.
+      responses:
+        "200":
+          description: Cleaned text
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cleaned_text:
+                    type: string
+                  original_length:
+                    type: integer
+                  cleaned_length:
+                    type: integer
+                  removed_characters:
+                    type: integer
+  /extract_keywords_simple:
+    post:
+      operationId: extract_keywords_simple
+      summary: Extract simple keywords
+      description: Extract rough keywords by frequency. Chinese text uses lightweight 2-4 character n-grams.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  description: The text to analyze.
+                top_k:
+                  type: integer
+                  default: 10
+                  minimum: 1
+                  maximum: 50
+                min_length:
+                  type: integer
+                  default: 2
+                  minimum: 1
+                  maximum: 10
+      responses:
+        "200":
+          description: Keywords
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keywords:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        keyword:
+                          type: string
+                        frequency:
+                          type: integer
+                  method_note:
+                    type: string
+  /academic_check:
+    post:
+      operationId: academic_check
+      summary: Check Chinese academic text
+      description: Detect oral expressions, weak expressions, repeated connectors, long sentences, and short paragraphs in Chinese academic writing.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  description: Chinese academic text to check.
+      responses:
+        "200":
+          description: Academic writing check result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sentence_count:
+                    type: integer
+                  paragraph_count:
+                    type: integer
+                  oral_expression_hits:
+                    type: object
+                    additionalProperties:
+                      type: integer
+                  weak_expression_hits:
+                    type: object
+                    additionalProperties:
+                      type: integer
+                  connector_hits:
+                    type: object
+                    additionalProperties:
+                      type: integer
+                  long_sentence_count:
+                    type: integer
+                  very_short_paragraph_count:
+                    type: integer
+                  suggestions:
+                    type: array
+                    items:
+                      type: string
+  /formula_template:
+    post:
+      operationId: formula_template
+      summary: Generate an academic formula explanation template
+      description: Turn an indicator description into a structured academic formula-writing prompt. This is rule-based and does not infer exact mathematical notation.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  description: Indicator description or formula requirement.
+      responses:
+        "200":
+          description: Formula explanation template
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  template:
+                    type: string
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
